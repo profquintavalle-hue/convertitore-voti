@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Convertitore Voti — /100 · /20 · /10</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: system-ui, -apple-system, sans-serif;
+    background: #f7f5f0;
+    color: #1a1a1a;
+    min-height: 100vh;
+    padding: 2rem 1rem;
+  }
+
+  h1 {
+    font-size: 22px;
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+    color: #1a1a1a;
+  }
+
+  .subtitle {
+    font-size: 13px;
+    color: #888;
+    margin-bottom: 2rem;
+  }
+
+  /* ── CONVERTITORE ISTANTANEO ── */
+  .converter {
+    background: #fff;
+    border: 1px solid #e8e4db;
+    border-radius: 14px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+  }
+
+  .converter h2 {
+    font-size: 13px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    color: #aaa;
+    margin-bottom: 1.2rem;
+  }
+
+  .input-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 1.4rem;
+    flex-wrap: wrap;
+  }
+
+  .input-row label {
+    font-size: 15px;
+    color: #555;
+  }
+
+  #voto {
+    font-size: 32px;
+    font-weight: 600;
+    width: 110px;
+    text-align: center;
+    padding: 8px 10px;
+    border: 2px solid #ddd;
+    border-radius: 10px;
+    background: #fafafa;
+    color: #1a1a1a;
+    outline: none;
+    transition: border-color .15s;
+  }
+
+  #voto:focus { border-color: #7a8cff; }
+
+  .slash { font-size: 18px; color: #bbb; }
+
+  .cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+    gap: 10px;
+    margin-bottom: 1rem;
+  }
+
+  .card {
+    background: #f7f5f0;
+    border-radius: 10px;
+    padding: 1rem;
+    text-align: center;
+    border: 1px solid #e8e4db;
+  }
+
+  .card-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    color: #aaa;
+    margin-bottom: 6px;
+  }
+
+  .card-value {
+    font-size: 28px;
+    font-weight: 600;
+    color: #1a1a1a;
+    line-height: 1;
+  }
+
+  .card-denom {
+    font-size: 12px;
+    color: #bbb;
+    margin-top: 4px;
+  }
+
+  .esito-bar {
+    border-radius: 8px;
+    padding: 9px 14px;
+    font-size: 14px;
+    font-weight: 600;
+    text-align: center;
+    transition: background .2s, color .2s;
+  }
+
+  .esito-suff   { background: #e6f4e6; color: #2e7d32; }
+  .esito-limite { background: #fff8e1; color: #b45309; }
+  .esito-insuff { background: #fdecea; color: #c62828; }
+  .esito-vuoto  { background: #f0ece4; color: #bbb; }
+
+  .hint {
+    font-size: 11px;
+    color: #bbb;
+    text-align: center;
+    margin-top: .6rem;
+  }
+
+  /* ── TABELLA COMPLETA ── */
+  .table-section {
+    background: #fff;
+    border: 1px solid #e8e4db;
+    border-radius: 14px;
+    overflow: hidden;
+  }
+
+  .table-section h2 {
+    font-size: 13px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    color: #aaa;
+    padding: 1.2rem 1.5rem .8rem;
+    border-bottom: 1px solid #f0ece4;
+  }
+
+  .table-wrap {
+    max-height: 480px;
+    overflow-y: auto;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+  }
+
+  thead th {
+    background: #faf8f4;
+    font-weight: 600;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: .05em;
+    color: #aaa;
+    padding: 8px 14px;
+    text-align: center;
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    border-bottom: 1px solid #e8e4db;
+  }
+
+  tbody td {
+    padding: 7px 14px;
+    text-align: center;
+    border-bottom: 1px solid #f5f2ec;
+    color: #1a1a1a;
+  }
+
+  tbody tr:last-child td { border-bottom: none; }
+
+  tbody tr:hover { background: #faf8f4; }
+
+  tr.row-highlight td {
+    background: #eef1ff !important;
+  }
+
+  .badge {
+    display: inline-block;
+    padding: 2px 9px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+  }
+
+  .b-suff   { background: #e6f4e6; color: #2e7d32; }
+  .b-limite { background: #fff8e1; color: #b45309; }
+  .b-insuff { background: #fdecea; color: #c62828; }
+
+  .legend {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+    padding: .8rem 1.5rem;
+    border-top: 1px solid #f0ece4;
+  }
+
+  .leg-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: #888;
+  }
+
+  .leg-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 3px;
+  }
+
+  @media (max-width: 480px) {
+    .cards { grid-template-columns: 1fr 1fr; }
+    #voto { font-size: 26px; width: 90px; }
+  }
+</style>
+</head>
+<body>
+
+<h1>Convertitore voti</h1>
+<p class="subtitle">Centesimi → ventesimi → decimi &nbsp;·&nbsp; Sufficienza: 60 / 12 / 6</p>
+
+<!-- CONVERTITORE ISTANTANEO -->
+<div class="converter">
+  <h2>Convertitore istantaneo</h2>
+  <div class="input-row">
+    <label for="voto">Voto:</label>
+    <input type="number" id="voto" min="0" max="100" placeholder="—" oninput="converti(this.value)">
+    <span class="slash">/ 100</span>
+  </div>
+  <div class="cards">
+    <div class="card">
+      <div class="card-label">Centesimi</div>
+      <div class="card-value" id="out100">—</div>
+      <div class="card-denom">/ 100</div>
+    </div>
+    <div class="card">
+      <div class="card-label">Ventesimi</div>
+      <div class="card-value" id="out20">—</div>
+      <div class="card-denom">/ 20</div>
+    </div>
+    <div class="card">
+      <div class="card-label">Decimi</div>
+      <div class="card-value" id="out10">—</div>
+      <div class="card-denom">/ 10</div>
+    </div>
+  </div>
+  <div class="esito-bar esito-vuoto" id="esito">Inserisci un voto per vedere la valutazione</div>
+  <p class="hint">Sufficienza: 60/100 · 12/20 · 6/10</p>
+</div>
+
+<!-- TABELLA COMPLETA -->
+<div class="table-section">
+  <h2>Tabella completa</h2>
+  <div class="table-wrap">
+    <table id="tabella">
+      <thead>
+        <tr>
+          <th>/ 100</th>
+          <th>/ 20</th>
+          <th>/ 10</th>
+          <th>esito</th>
+        </tr>
+      </thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+  <div class="legend">
+    <div class="leg-item"><div class="leg-dot" style="background:#e6f4e6;border:1px solid #a5d6a7;"></div>sufficiente (≥ 6/10)</div>
+    <div class="leg-item"><div class="leg-dot" style="background:#fff8e1;border:1px solid #ffe082;"></div>al limite (5.5–5.9)</div>
+    <div class="leg-item"><div class="leg-dot" style="background:#fdecea;border:1px solid #ef9a9a;"></div>insufficiente (&lt; 5.5)</div>
+  </div>
+</div>
+
+<script>
+  // ── Costruisce la tabella ──
+  const tbody = document.getElementById('tbody');
+  for (let c = 100; c >= 0; c--) {
+    const v20 = Math.round((c / 5) * 100) / 100;
+    const v10 = Math.round((c / 10) * 100) / 100;
+    let cls, esito;
+    if (v10 >= 6)        { cls = 'b-suff';   esito = 'sufficiente'; }
+    else if (v10 >= 5.5) { cls = 'b-limite'; esito = 'al limite';   }
+    else                 { cls = 'b-insuff';  esito = 'insufficiente'; }
+    const fmt = n => n % 1 === 0 ? n : n.toFixed(2);
+    const tr = document.createElement('tr');
+    tr.id = 'r' + c;
+    tr.innerHTML = `<td>${c}</td><td>${fmt(v20)}</td><td>${fmt(v10)}</td><td><span class="badge ${cls}">${esito}</span></td>`;
+    tbody.appendChild(tr);
+  }
+
+  // ── Convertitore istantaneo ──
+  function fmt(n) {
+    if (n === null || isNaN(n)) return '—';
+    return n % 1 === 0 ? n : n.toFixed(2);
+  }
+
+  function converti(val) {
+    const c = parseFloat(val);
+    const o100 = document.getElementById('out100');
+    const o20  = document.getElementById('out20');
+    const o10  = document.getElementById('out10');
+    const esito = document.getElementById('esito');
+
+    // rimuovi highlight precedente
+    document.querySelectorAll('#tbody tr').forEach(r => r.classList.remove('row-highlight'));
+
+    if (val === '' || isNaN(c) || c < 0 || c > 100) {
+      o100.textContent = '—';
+      o20.textContent  = '—';
+      o10.textContent  = '—';
+      esito.className  = 'esito-bar esito-vuoto';
+      esito.textContent = 'Inserisci un voto per vedere la valutazione';
+      return;
+    }
+
+    const v20 = Math.round((c / 5) * 100) / 100;
+    const v10 = Math.round((c / 10) * 100) / 100;
+
+    o100.textContent = fmt(c);
+    o20.textContent  = fmt(v20);
+    o10.textContent  = fmt(v10);
+
+    if (v10 >= 6) {
+      esito.className  = 'esito-bar esito-suff';
+      esito.textContent = '✓ Sufficiente';
+    } else if (v10 >= 5.5) {
+      esito.className  = 'esito-bar esito-limite';
+      esito.textContent = '⚠ Al limite (5.5–5.9)';
+    } else {
+      esito.className  = 'esito-bar esito-insuff';
+      esito.textContent = '✗ Insufficiente';
+    }
+
+    // evidenzia riga corrispondente nella tabella
+    const intC = Math.round(c);
+    const row = document.getElementById('r' + intC);
+    if (row) {
+      row.classList.add('row-highlight');
+      row.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    }
+  }
+</script>
+</body>
+</html>
